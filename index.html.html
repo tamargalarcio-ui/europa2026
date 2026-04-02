@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Europa 2026">
+<meta name="theme-color" content="#1a1a2e">
+<title>Europa 2026 ✈</title>
+<style>
+  :root {
+    --dark: #1a1a2e;
+    --accent: #4f8ef7;
+    --bg: #f5f5f7;
+    --card: #ffffff;
+    --text: #1c1c1e;
+    --muted: #6e6e73;
+    --border: rgba(0,0,0,0.1);
+    --radius: 14px;
+    --radius-sm: 8px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a0a0f;
+      --card: #1c1c1e;
+      --text: #f2f2f7;
+      --muted: #8e8e93;
+      --border: rgba(255,255,255,0.1);
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+  /* ── SETUP SCREEN ── */
+  #setup-screen {
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 24px; gap: 20px; text-align: center;
+  }
+  #setup-screen .icon { font-size: 52px; }
+  #setup-screen h1 { font-size: 24px; font-weight: 700; color: var(--text); }
+  #setup-screen p { font-size: 15px; color: var(--muted); line-height: 1.6; max-width: 320px; }
+  #setup-screen input {
+    width: 100%; max-width: 360px; padding: 14px 16px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--card); color: var(--text);
+    font-size: 14px; outline: none;
+  }
+  #setup-screen input:focus { border-color: var(--accent); }
+  #setup-screen button {
+    width: 100%; max-width: 360px; padding: 15px; background: var(--dark); color: white;
+    border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  #setup-screen .hint {
+    font-size: 12px; color: var(--muted); max-width: 320px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 12px 14px; text-align: left; line-height: 1.6;
+  }
+  #setup-screen .hint strong { color: var(--text); }
+
+  /* ── LOADING ── */
+  #loading {
+    display: none; min-height: 100vh; align-items: center; justify-content: center;
+    flex-direction: column; gap: 16px;
+  }
+  .spinner {
+    width: 36px; height: 36px; border: 3px solid var(--border);
+    border-top-color: var(--dark); border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── MAIN APP ── */
+  #app { display: none; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; }
+
+  /* Header */
+  .header { background: var(--dark); padding: 44px 20px 14px; color: white; flex: none; }
+  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .app-name { font-size: 20px; font-weight: 700; }
+  .app-sub { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+  .refresh-btn { background: rgba(255,255,255,0.12); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
+  .city-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .city-strip::-webkit-scrollbar { display: none; }
+  .city-chip { flex: none; background: rgba(255,255,255,0.1); border: none; color: rgba(255,255,255,0.7); border-radius: 20px; padding: 6px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+  .city-chip.active { background: white; color: var(--dark); font-weight: 600; }
+
+  /* Nav tabs */
+  .nav { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex: none; }
+  .nav-tab { flex: 1; padding: 11px 4px; font-size: 11px; font-weight: 500; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .nav-tab.active { color: var(--dark); border-bottom-color: var(--dark); }
+
+  /* Content */
+  .content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* Cards */
+  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px; }
+  .card-row { display: flex; align-items: flex-start; gap: 12px; }
+  .card-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .card-detail { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+
+  /* Section label */
+  .sec-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 8px; }
+
+  /* Tags */
+  .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+  .tag-vuelo { background: #dbeafe; color: #1e40af; }
+  .tag-tren { background: #dcfce7; color: #166534; }
+  .tag-bus { background: #fef3c7; color: #92400e; }
+  .tag-hospedaje { background: #ede9fe; color: #5b21b6; }
+  .tag-actividad { background: #fee2e2; color: #991b1b; }
+  .tag-gratis { background: #dcfce7; color: #166534; }
+
+  /* Budget */
+  .budget-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .budget-row:last-child { border-bottom: none; }
+  .budget-label { font-size: 13px; color: var(--text); }
+  .budget-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .budget-amount { font-size: 14px; font-weight: 600; color: var(--text); }
+  .budget-total { background: var(--dark); color: white; border-radius: var(--radius-sm); padding: 14px 16px; display: flex; justify-content: space-between; margin-top: 12px; }
+
+  /* Metrics */
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .metric { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
+  .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .metric-value { font-size: 18px; font-weight: 700; color: var(--text); }
+
+  /* Checklist */
+  .check-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
+  .check-item:last-child { border-bottom: none; }
+  .check-box { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex: none; transition: all 0.15s; }
+  .check-box.done { background: var(--dark); border-color: var(--dark); }
+  .check-box.done::after { content: ''; display: block; width: 5px; height: 9px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); }
+  .check-text { font-size: 13px; color: var(--text); transition: all 0.15s; }
+  .check-text.done { text-decoration: line-through; color: var(--muted); }
+
+  /* Sitios */
+  .sitio-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .sitio-item:last-child { border-bottom: none; }
+  .sitio-name { flex: 1; font-size: 13px; color: var(--text); text-transform: capitalize; }
+  .sitio-link { font-size: 11px; color: var(--accent); text-decoration: none; }
+
+  /* Error */
+  .error-box { background: #fee2e2; border: 1px solid #fca5a5; border-radius: var(--radius-sm); padding: 14px 16px; font-size: 13px; color: #991b1b; margin-bottom: 12px; }
+
+  /* Itinerary timeline */
+  .it-item { display: flex; gap: 12px; }
+  .it-line { display: flex; flex-direction: column; align-items: center; }
+  .it-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dark); flex: none; margin-top: 5px; }
+  .it-stem { flex: 1; width: 1px; background: var(--border); min-height: 20px; }
+  .it-body { padding-bottom: 16px; flex: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── PANTALLA DE CONFIGURACIÓN ── -->
+<div id="setup-screen">
+  <div class="icon">✈️</div>
+  <h1>Europa 2026</h1>
+  <p>Pegá la URL de tu Apps Script para conectar la app con tu Google Sheet en tiempo real.</p>
+  <input type="url" id="script-url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
+  <button onclick="conectar()">Conectar con mi Sheet →</button>
+  <div class="hint">
+    <strong>¿Cómo obtener la URL?</strong><br>
+    1. Google Sheet → <strong>Extensiones → Apps Script</strong><br>
+    2. Pegá el código que te dio Claude<br>
+    3. <strong>Implementar → Nueva implementación</strong><br>
+    4. Tipo: App web · Acceso: <strong>Cualquier persona</strong><br>
+    5. Copiá la URL que aparece y pegala arriba
+  </div>
+</div>
+
+<!-- ── LOADING ── -->
+<div id="loading" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;">
+  <div class="spinner"></div>
+  <p style="color:var(--muted);font-size:14px">Cargando tu viaje...</p>
+</div>
+
+<!-- ── APP PRINCIPAL ── -->
+<div id="app" style="display:none;flex-direction:column;height:100vh;">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="app-name">Europa 2026 ✈</div>
+        <div class="app-sub">26 abr — jun 2026 · 2 viajeras</div>
+      </div>
+      <button class="refresh-btn" onclick="recargar()">↻ Actualizar</button>
+    </div>
+    <div class="city-strip" id="city-strip">
+      <button class="city-chip active" onclick="filtrarCiudad('all', this)">Todo</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <div class="nav-tab active" onclick="showTab('itinerario', this)">Itinerario</div>
+    <div class="nav-tab" onclick="showTab('logistica', this)">Logística</div>
+    <div class="nav-tab" onclick="showTab('presupuesto', this)">Presupuesto</div>
+    <div class="nav-tab" onclick="showTab('equipaje', this)">Equipaje</div>
+    <div class="nav-tab" onclick="showTab('sitios', this)">Sitios</div>
+  </div>
+
+  <div class="content">
+    <div class="section active" id="sec-itinerario"><p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Cargando...</p></div>
+    <div class="section" id="sec-logistica"></div>
+    <div class="section" id="sec-presupuesto"></div>
+    <div class="section" id="sec-equipaje"></div>
+    <div class="section" id="sec-sitios"></div>
+  </div>
+</div>
+
+<script>
+// ── ESTADO ──
+let DATA = null;
+let currentCity = 'all';
+const checkState = JSON.parse(localStorage.getItem('europa_checks') || '{}');
+const SCRIPT_URL_KEY = 'europa_script_url';
+
+// ── INICIAR ──
+window.onload = () => {
+  const saved = localStorage.getItem(SCRIPT_URL_KEY);
+  if (saved) {
+    document.getElementById('script-url').value = saved;
+    cargar(saved);
+  }
+};
+
+async function conectar() {
+  const url = document.getElementById('script-url').value.trim();
+  if (!url) return alert('Pegá la URL primero');
+  localStorage.setItem(SCRIPT_URL_KEY, url);
+  await cargar(url);
+}
+
+async function recargar() {
+  const url = localStorage.getItem(SCRIPT_URL_KEY);
+  if (url) await cargar(url);
+}
+
+async function cargar(url) {
+  document.getElementById('setup-screen').style.display = 'none';
+  const loading = document.getElementById('loading');
+  loading.style.display = 'flex';
+  try {
+    const res = await fetch(url);
+    const json = await res.json();
+    DATA = json;
+    loading.style.display = 'none';
+    const app = document.getElementById('app');
+    app.style.display = 'flex';
+    buildCityStrip();
+    renderAll();
+  } catch(e) {
+    loading.style.display = 'none';
+    document.getElementById('setup-screen').style.display = 'flex';
+    alert('No se pudo conectar. Verificá que la URL sea correcta y que el acceso sea "Cualquier persona".\n\nError: ' + e.message);
+  }
+}
+
+// ── TABS ──
+function showTab(tab, el) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sec-' + tab).classList.add('active');
+}
+
+// ── CIUDADES ──
+function buildCityStrip() {
+  if (!DATA || !DATA.budget) return;
+  const ciudades = [...new Set(DATA.budget.map(r => r.pais || r.lugar).filter(Boolean))];
+  const strip = document.getElementById('city-strip');
+  // Ciudades únicas del itinerario
+  const nombres = ['Madrid','París','Annecy','Ginebra','Roma','Florencia','Venecia','Barcelona'];
+  const emojis  = { Madrid:'🇪🇸', París:'🇫🇷', Annecy:'🏔', Ginebra:'🇨🇭', Roma:'🇮🇹', Florencia:'🌸', Venecia:'🚤', Barcelona:'🎨' };
+  nombres.forEach(c => {
+    const btn = document.createElement('button');
+    btn.className = 'city-chip';
+    btn.textContent = (emojis[c] || '') + ' ' + c;
+    btn.onclick = function() { filtrarCiudad(c, this); };
+    strip.appendChild(btn);
+  });
+}
+
+function filtrarCiudad(city, el) {
+  currentCity = city;
+  document.querySelectorAll('.city-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderAll();
+}
+
+// ── RENDER HELPERS ──
+function getTagClass(tipo) {
+  const m = { 'Vuelo':'tag-vuelo','Tren':'tag-tren','Bus':'tag-bus','hospedaje':'tag-hospedaje','Actividad':'tag-actividad' };
+  return m[tipo] || 'tag-actividad';
+}
+function getIcon(tipo, cat) {
+  if (tipo === 'Vuelo') return '✈️';
+  if (tipo === 'Tren') return '🚄';
+  if (tipo === 'Bus') return '🚌';
+  if (cat === 'hospedaje') return '🏨';
+  if (cat === 'Actividad') return '🎟';
+  return '📌';
+}
+function getIconBg(tipo, cat) {
+  if (tipo === 'Vuelo') return '#dbeafe';
+  if (tipo === 'Tren') return '#dcfce7';
+  if (tipo === 'Bus') return '#fef3c7';
+  if (cat === 'hospedaje') return '#ede9fe';
+  return '#fee2e2';
+}
+
+// ── ITINERARIO ──
+function renderItinerario() {
+  if (!DATA) return;
+  const budget = DATA.budget || [];
+  // Filtrar por ciudad si aplica
+  const filtered = currentCity === 'all' ? budget : budget.filter(r => {
+    const desc = (r.descripcion || '').toLowerCase();
+    const lugar = (r.lugar || '').toLowerCase();
+    return desc.includes(currentCity.toLowerCase()) || lugar.includes(currentCity.toLowerCase());
+  });
+
+  // Agrupar por ciudad detectada
+  const cityMap = {
+    'Madrid':['madrid'], 'París':['paris','parís'], 'Annecy':['annecy'],
+    'Ginebra':['ginebra'], 'Roma':['roma'], 'Florencia':['florencia'],
+    'Venecia':['venecia'], 'Barcelona':['barcelona']
+  };
+  function detectCity(row) {
+    const s = (row.descripcion + ' ' + row.lugar + ' ' + row.pais).toLowerCase();
+    for (const [city, keys] of Object.entries(cityMap)) {
+      if (keys.some(k => s.includes(k))) return city;
+    }
+    return row.pais || 'Otros';
+  }
+
+  // Construir grupos
+  const grupos = {};
+  filtered.forEach(row => {
+    const city = detectCity(row);
+    if (!grupos[city]) grupos[city] = [];
+    grupos[city].push(row);
+  });
+
+  const emojis = { Madrid:'🇪🇸', París:'🇫🇷', Annecy:'🏔', Ginebra:'🇨🇭', Roma:'🇮🇹', Florencia:'🌸', Venecia:'🚤', Barcelona:'🎨', Otros:'📍' };
+  let html = '';
+
+  Object.entries(grupos).forEach(([city, rows]) => {
+    html += `<div class="sec-label">${emojis[city]||'📍'} ${city}</div>`;
+    rows.forEach((row, idx) => {
+      const isLast = idx === rows.length - 1;
+      const icon = getIcon(row.tipo, row.categoria);
+      const iconBg = getIconBg(row.tipo, row.categoria);
+      const tagClass = row.tipo ? getTagClass(row.tipo) : getTagClass(row.categoria);
+      const tagLabel = row.tipo || row.categoria;
+      const precio = row.preciox2 ? `USD ${Number(row.preciox2).toLocaleString()}` : (row.preciox1 ? `USD ${Number(row.preciox1).toLocaleString()} x1` : '');
+      html += `<div class="it-item">
+        <div class="it-line">
+          <div class="it-dot"></div>
+          ${!isLast ? '<div class="it-stem"></div>' : ''}
+        </div>
+        <div class="it-body">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:14px">${icon}</span>
+            <span style="font-size:13px;font-weight:600">${row.descripcion}</span>
+            <span class="tag ${tagClass}">${tagLabel}</span>
+          </div>
+          ${row.fecha ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${row.fecha}</div>` : ''}
+          <div style="font-size:12px;color:var(--muted);margin-top:3px">
+            ${row.lugar ? row.lugar.split('\\n')[0] + (precio ? ' · ' + precio : '') : precio}
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+
+  document.getElementById('sec-itinerario').innerHTML = html || '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Sin eventos para esta ciudad</p>';
+}
+
+// ── LOGÍSTICA ──
+function renderLogistica() {
+  if (!DATA) return;
+  const budget = DATA.budget || [];
+  const isTransporte = r => ['Vuelo','Tren','Bus'].includes(r.tipo);
+  const isHospedaje  = r => r.categoria === 'hospedaje';
+
+  const transportes = budget.filter(r => isTransporte(r) && (currentCity === 'all' || (r.descripcion+r.lugar+r.pais).toLowerCase().includes(currentCity.toLowerCase())));
+  const hospedajes  = budget.filter(r => isHospedaje(r) && (currentCity === 'all' || (r.descripcion+r.lugar+r.pais).toLowerCase().includes(currentCity.toLowerCase())));
+
+  let html = '';
+  if (transportes.length) {
+    html += '<div class="sec-label">Transportes</div>';
+    transportes.forEach(r => {
+      const icon = getIcon(r.tipo, r.categoria);
+      const bg   = getIconBg(r.tipo, r.categoria);
+      html += `<div class="card"><div class="card-row">
+        <div class="card-icon" style="background:${bg}">${icon}</div>
+        <div style="flex:1">
+          <div class="card-title">${r.descripcion} <span class="tag ${getTagClass(r.tipo)}">${r.tipo}</span></div>
+          <div class="card-sub">${r.fecha || ''}</div>
+          <div class="card-detail">${r.preciox2 ? 'USD ' + Number(r.preciox2).toLocaleString() + ' (2 pax)' : r.preciox1 ? 'USD ' + Number(r.preciox1).toLocaleString() + ' x pax' : ''}</div>
+        </div></div></div>`;
+    });
+  }
+  if (hospedajes.length) {
+    html += '<div class="sec-label">Hospedajes</div>';
+    hospedajes.forEach(r => {
+      const addr = r.lugar.replace(/\\n/g, ' · ');
+      html += `<div class="card"><div class="card-row">
+        <div class="card-icon" style="background:#ede9fe">🏨</div>
+        <div style="flex:1">
+          <div class="card-title">${r.descripcion}</div>
+          <div class="card-sub">${r.fecha || ''}${r.dias ? ' · ' + r.dias + ' noches' : ''}</div>
+          <div class="card-detail">${addr}${r.preciox2 ? '<br>USD ' + Number(r.preciox2).toLocaleString() + ' total' : ''}</div>
+        </div></div></div>`;
+    });
+  }
+  document.getElementById('sec-logistica').innerHTML = html || '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Sin logística para esta ciudad</p>';
+}
+
+// ── PRESUPUESTO ──
+function renderPresupuesto() {
+  if (!DATA) return;
+  const budget = DATA.budget || [];
+  const dinero = DATA.dinero || [];
+
+  const pasajes = budget.filter(r => ['Vuelo','Tren','Bus'].includes(r.tipo));
+  const hospedajes = budget.filter(r => r.categoria === 'hospedaje');
+  const actividades = budget.filter(r => r.categoria === 'Actividad');
+
+  const sum = arr => arr.reduce((a, r) => a + (Number(r.preciox2) || Number(r.preciox1) || 0), 0);
+  const totalPas = sum(pasajes);
+  const totalHos = sum(hospedajes);
+  const totalAct = sum(actividades);
+  const totalGen = totalPas + totalHos + totalAct;
+
+  const totalUSD   = dinero.reduce((a,r) => a + (r.label !== 'Wise+dolarapp' && r.label !== 'cash' ? (r.usd || 0) : 0), 0);
+  const totalEuros = dinero.reduce((a,r) => a + (r.euros || 0), 0);
+
+  let html = `<div class="metrics">
+    <div class="metric"><div class="metric-label">Total estimado</div><div class="metric-value">USD ${totalGen.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Disponible</div><div class="metric-value">€ ${Math.round(totalEuros).toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Pasajes</div><div class="metric-value" style="font-size:15px">USD ${totalPas.toLocaleString()}</div></div>
+    <div class="metric"><div class="metric-label">Hospedaje</div><div class="metric-value" style="font-size:15px">USD ${totalHos.toLocaleString()}</div></div>
+  </div>`;
+
+  html += '<div class="sec-label">Pasajes y transportes</div><div class="card">';
+  pasajes.forEach(r => {
+    const amt = r.preciox2 ? `USD ${Number(r.preciox2).toLocaleString()}` : `USD ${Number(r.preciox1).toLocaleString()} x1`;
+    html += `<div class="budget-row"><div><div class="budget-label">${r.descripcion}</div><div class="budget-sub">${r.tipo}</div></div><div class="budget-amount">${amt}</div></div>`;
+  });
+  html += '</div>';
+
+  html += '<div class="sec-label">Actividades</div><div class="card">';
+  actividades.forEach(r => {
+    const amt = r.preciox2 > 0 ? `USD ${Number(r.preciox2).toLocaleString()}` : (r.preciox1 > 0 ? `USD ${Number(r.preciox1).toLocaleString()}` : '<span style="color:#166534">Gratis</span>');
+    html += `<div class="budget-row"><div><div class="budget-label">${r.lugar || r.descripcion}</div></div><div class="budget-amount">${amt}</div></div>`;
+  });
+  html += '</div>';
+
+  if (dinero.length) {
+    html += '<div class="sec-label">Efectivo disponible</div><div class="card">';
+    dinero.forEach(r => {
+      html += `<div class="budget-row"><div class="budget-label">${r.label}</div><div class="budget-amount">€ ${Math.round(r.euros).toLocaleString()}</div></div>`;
+    });
+    html += `<div class="budget-total"><span>Total en euros</span><span style="font-size:16px;font-weight:700">€ ${Math.round(totalEuros).toLocaleString()}</span></div></div>`;
+  }
+
+  document.getElementById('sec-presupuesto').innerHTML = html;
+}
+
+// ── EQUIPAJE ──
+function renderEquipaje() {
+  if (!DATA || !DATA.equipaje) return;
+  const eq = DATA.equipaje;
+  const catIcons = { Aseo:'🧴', Skincare:'✨', Makeup:'💄', Botiquin:'🩹', Vestido:'👗', Tops:'👚', Bottoms:'👖', Zapatos:'👟', Abrigo:'🧥', Accesorios:'💍', Docs:'🪪' };
+
+  let html = '';
+  Object.entries(eq).forEach(([cat, items]) => {
+    html += `<div class="sec-label">${catIcons[cat]||'📦'} ${cat}</div><div class="card">`;
+    items.forEach((item, i) => {
+      const key = 'eq_' + cat + '_' + i;
+      const done = checkState[key] || false;
+      html += `<div class="check-item" onclick="toggleCheck('${key}', this)">
+        <div class="check-box${done?' done':''}"></div>
+        <div class="check-text${done?' done':''}">${item}</div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('sec-equipaje').innerHTML = html;
+}
+
+function toggleCheck(key, el) {
+  checkState[key] = !checkState[key];
+  const box = el.querySelector('.check-box');
+  const txt = el.querySelector('.check-text');
+  box.classList.toggle('done', checkState[key]);
+  txt.classList.toggle('done', checkState[key]);
+  localStorage.setItem('europa_checks', JSON.stringify(checkState));
+}
+
+// ── SITIOS ──
+function renderSitios() {
+  if (!DATA || !DATA.sitios) return;
+  const sitios = DATA.sitios;
+  let html = '';
+  Object.entries(sitios).forEach(([ciudad, lugares]) => {
+    html += `<div class="sec-label">📍 ${ciudad}</div><div class="card">`;
+    lugares.forEach(l => {
+      html += `<div class="sitio-item">
+        <div class="sitio-name">${l.nombre}</div>
+        ${l.url ? `<a href="${l.url}" class="sitio-link" target="_blank">Ver →</a>` : ''}
+      </div>`;
+    });
+    html += '</div>';
+  });
+  document.getElementById('sec-sitios').innerHTML = html || '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Sin sitios cargados</p>';
+}
+
+function renderAll() {
+  renderItinerario();
+  renderLogistica();
+  renderPresupuesto();
+  renderEquipaje();
+  renderSitios();
+}
+</script>
+</body>
+</html>
