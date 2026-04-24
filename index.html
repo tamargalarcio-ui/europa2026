@@ -2,531 +2,351 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Europa 2026">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#0f0f1a">
 <title>Europa 2026 ✈</title>
 <style>
-  :root {
-    --dark: #1a1a2e;
-    --accent: #4f8ef7;
-    --bg: #f5f5f7;
-    --card: #ffffff;
-    --text: #1c1c1e;
-    --muted: #6e6e73;
-    --border: rgba(0,0,0,0.1);
-    --radius: 14px;
-    --radius-sm: 8px;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #0a0a0f;
-      --card: #1c1c1e;
-      --text: #f2f2f7;
-      --muted: #8e8e93;
-      --border: rgba(255,255,255,0.1);
-    }
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
-
-  /* ── SETUP SCREEN ── */
-  #setup-screen {
-    min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
-    padding: 32px 24px; gap: 20px; text-align: center;
-  }
-  #setup-screen .icon { font-size: 52px; }
-  #setup-screen h1 { font-size: 24px; font-weight: 700; color: var(--text); }
-  #setup-screen p { font-size: 15px; color: var(--muted); line-height: 1.6; max-width: 320px; }
-  #setup-screen input {
-    width: 100%; max-width: 360px; padding: 14px 16px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--card); color: var(--text);
-    font-size: 14px; outline: none;
-  }
-  #setup-screen input:focus { border-color: var(--accent); }
-  #setup-screen button {
-    width: 100%; max-width: 360px; padding: 15px; background: var(--dark); color: white;
-    border: none; border-radius: var(--radius-sm); font-size: 16px; font-weight: 600; cursor: pointer;
-  }
-  #setup-screen .hint {
-    font-size: 12px; color: var(--muted); max-width: 320px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 12px 14px; text-align: left; line-height: 1.6;
-  }
-  #setup-screen .hint strong { color: var(--text); }
-
-  /* ── LOADING ── */
-  #loading {
-    display: none; min-height: 100vh; align-items: center; justify-content: center;
-    flex-direction: column; gap: 16px;
-  }
-  .spinner {
-    width: 36px; height: 36px; border: 3px solid var(--border);
-    border-top-color: var(--dark); border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* ── MAIN APP ── */
-  #app { display: none; flex-direction: column; height: 100vh; max-width: 480px; margin: 0 auto; }
-
-  /* Header */
-  .header { background: var(--dark); padding: 44px 20px 14px; color: white; flex: none; }
-  .header-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-  .app-name { font-size: 20px; font-weight: 700; }
-  .app-sub { font-size: 12px; opacity: 0.6; margin-top: 2px; }
-  .refresh-btn { background: rgba(255,255,255,0.12); border: none; color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; }
-  .city-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
-  .city-strip::-webkit-scrollbar { display: none; }
-  .city-chip { flex: none; background: rgba(255,255,255,0.1); border: none; color: rgba(255,255,255,0.7); border-radius: 20px; padding: 6px 14px; font-size: 12px; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
-  .city-chip.active { background: white; color: var(--dark); font-weight: 600; }
-
-  /* Nav tabs */
-  .nav { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex: none; }
-  .nav-tab { flex: 1; padding: 11px 4px; font-size: 11px; font-weight: 500; text-align: center; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; transition: all 0.2s; }
-  .nav-tab.active { color: var(--dark); border-bottom-color: var(--dark); }
-
-  /* Content */
-  .content { flex: 1; overflow-y: auto; padding: 16px; -webkit-overflow-scrolling: touch; }
-  .section { display: none; }
-  .section.active { display: block; }
-
-  /* Cards */
-  .card { background: var(--card); border-radius: var(--radius); border: 1px solid var(--border); padding: 14px 16px; margin-bottom: 10px; }
-  .card-row { display: flex; align-items: flex-start; gap: 12px; }
-  .card-icon { width: 38px; height: 38px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 18px; flex: none; }
-  .card-title { font-size: 14px; font-weight: 600; color: var(--text); }
-  .card-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  .card-detail { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
-
-  /* Section label */
-  .sec-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 8px; }
-
-  /* Tags */
-  .tag { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
-  .tag-vuelo { background: #dbeafe; color: #1e40af; }
-  .tag-tren { background: #dcfce7; color: #166534; }
-  .tag-bus { background: #fef3c7; color: #92400e; }
-  .tag-hospedaje { background: #ede9fe; color: #5b21b6; }
-  .tag-actividad { background: #fee2e2; color: #991b1b; }
-  .tag-gratis { background: #dcfce7; color: #166534; }
-
-  /* Budget */
-  .budget-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .budget-row:last-child { border-bottom: none; }
-  .budget-label { font-size: 13px; color: var(--text); }
-  .budget-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .budget-amount { font-size: 14px; font-weight: 600; color: var(--text); }
-  .budget-total { background: var(--dark); color: white; border-radius: var(--radius-sm); padding: 14px 16px; display: flex; justify-content: space-between; margin-top: 12px; }
-
-  /* Metrics */
-  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
-  .metric { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; }
-  .metric-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-  .metric-value { font-size: 18px; font-weight: 700; color: var(--text); }
-
-  /* Checklist */
-  .check-item { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; }
-  .check-item:last-child { border-bottom: none; }
-  .check-box { width: 20px; height: 20px; border-radius: 6px; border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; flex: none; transition: all 0.15s; }
-  .check-box.done { background: var(--dark); border-color: var(--dark); }
-  .check-box.done::after { content: ''; display: block; width: 5px; height: 9px; border: 2px solid white; border-top: none; border-left: none; transform: rotate(45deg) translate(-1px,-1px); }
-  .check-text { font-size: 13px; color: var(--text); transition: all 0.15s; }
-  .check-text.done { text-decoration: line-through; color: var(--muted); }
-
-  /* Sitios */
-  .sitio-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-  .sitio-item:last-child { border-bottom: none; }
-  .sitio-name { flex: 1; font-size: 13px; color: var(--text); text-transform: capitalize; }
-  .sitio-link { font-size: 11px; color: var(--accent); text-decoration: none; }
-
-  /* Error */
-  .error-box { background: #fee2e2; border: 1px solid #fca5a5; border-radius: var(--radius-sm); padding: 14px 16px; font-size: 13px; color: #991b1b; margin-bottom: 12px; }
-
-  /* Itinerary timeline */
-  .it-item { display: flex; gap: 12px; }
-  .it-line { display: flex; flex-direction: column; align-items: center; }
-  .it-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dark); flex: none; margin-top: 5px; }
-  .it-stem { flex: 1; width: 1px; background: var(--border); min-height: 20px; }
-  .it-body { padding-bottom: 16px; flex: 1; }
+:root{--dark:#0f0f1a;--dark2:#1a1a2e;--bg:#f2f2f7;--card:#fff;--text:#1c1c1e;--muted:#6e6e73;--border:rgba(0,0,0,.09);--r:16px;--rs:10px;}
+@media(prefers-color-scheme:dark){:root{--bg:#0f0f1a;--card:#1c1c1e;--text:#f2f2f7;--muted:#8e8e93;--border:rgba(255,255,255,.09);}}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);}
+.screen{display:none;min-height:100vh;}.screen.active{display:block;}
+.home-hdr{background:linear-gradient(150deg,#0f0f1a 0%,#1a1a3e 60%,#0d2060 100%);padding:52px 20px 24px;color:white;}
+.home-title{font-size:26px;font-weight:800;letter-spacing:-.5px;}
+.home-sub{font-size:13px;opacity:.6;margin-top:3px;}
+.stats{display:flex;gap:12px;margin-top:16px;}
+.stat{background:rgba(255,255,255,.1);border-radius:10px;padding:8px 14px;}
+.sv{font-size:18px;font-weight:700;}.sl{font-size:10px;opacity:.7;margin-top:1px;}
+.cities{padding:16px;display:flex;flex-direction:column;gap:10px;}
+.cc{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;cursor:pointer;transition:transform .15s;}
+.cc:active{transform:scale(.98);}
+.cc-top{display:flex;align-items:center;gap:12px;padding:16px 18px 12px;}
+.cc-emoji{font-size:32px;}.cc-name{font-size:18px;font-weight:700;}.cc-dates{font-size:11px;color:var(--muted);margin-top:2px;}
+.cc-chips{display:flex;gap:6px;flex-wrap:wrap;padding:0 18px 14px;}
+.chip{font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.cf{background:#dbeafe;color:#1d4ed8;}.ct{background:#dcfce7;color:#15803d;}.cb{background:#fef3c7;color:#b45309;}
+.ch{background:#ede9fe;color:#6d28d9;}.ca{background:#fee2e2;color:#b91c1c;}.cp{background:#fef3c7;color:#b45309;border:1px dashed #f59e0b;}
+.city-hdr{background:linear-gradient(150deg,#0f0f1a,#1a1a3e);padding:52px 20px 22px;color:white;}
+.back{background:rgba(255,255,255,.12);border:none;color:white;padding:6px 14px;border-radius:20px;font-size:13px;cursor:pointer;margin-bottom:14px;display:inline-block;}
+.cht{font-size:28px;font-weight:800;}.chd{font-size:12px;opacity:.6;margin-top:3px;}
+.city-body{padding:14px;display:flex;flex-direction:column;gap:10px;}
+.sc{background:var(--card);border-radius:var(--r);border:1px solid var(--border);overflow:hidden;}
+.sc-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--border);}
+.sc-icon{font-size:20px;}.sc-title{font-size:15px;font-weight:700;flex:1;}
+.sc-arr{font-size:16px;color:var(--muted);transition:transform .2s;}.sc-arr.open{transform:rotate(90deg);}
+.sc-body{padding:14px 16px;}.sc-body.hidden{display:none;}
+.tb{display:inline-flex;align-items:center;gap:6px;background:var(--dark2);color:white;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;margin-bottom:12px;flex-wrap:wrap;line-height:1.5;}
+.ta{font-size:10px;opacity:.75;}
+.ir{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);gap:10px;}
+.ir:last-child{border-bottom:none;}
+.irl{font-size:11px;color:var(--muted);flex:none;width:80px;padding-top:1px;}
+.irv{font-size:13px;color:var(--text);font-weight:500;text-align:right;flex:1;line-height:1.5;}
+.irv.mono{font-family:monospace;font-size:14px;color:#6d28d9;font-weight:700;letter-spacing:.5px;}
+.btn-g{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px;}
+.btn-g.one{grid-template-columns:1fr;}
+.btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:11px 8px;border-radius:var(--rs);border:none;cursor:pointer;font-size:12px;font-weight:600;text-decoration:none;transition:opacity .15s;}
+.btn:active{opacity:.7;}
+.bd{background:var(--dark2);color:white;}.bb{background:#dbeafe;color:#1d4ed8;}.bp{background:#ede9fe;color:#6d28d9;}
+.bg2{background:#dcfce7;color:#15803d;}.bgr{background:var(--bg);color:var(--muted);border:1px solid var(--border);}
+.bpend{background:#fef3c7;color:#b45309;border:1.5px dashed #f59e0b;}
+.act{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.act:last-child{border-bottom:none;}
+.adot{width:7px;height:7px;border-radius:50%;background:#6d28d9;flex:none;margin-top:5px;}
+.adot.c{background:#10b981;}
+.aname{font-size:13px;font-weight:600;line-height:1.4;}.adet{font-size:11px;color:var(--muted);margin-top:2px;}
+.abtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+.abtn{font-size:11px;font-weight:600;padding:5px 10px;border-radius:8px;text-decoration:none;border:none;cursor:pointer;}
+.nta{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:10px 12px;font-size:13px;color:var(--text);background:var(--bg);min-height:80px;resize:vertical;font-family:inherit;line-height:1.6;}
+.nta:focus{outline:none;border-color:#6d28d9;}
+.sbtn{margin-top:8px;padding:10px;background:var(--dark2);color:white;border:none;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;width:100%;}
+.af{display:none;margin-top:10px;}.af.open{display:block;}
+.ai{width:100%;border:1px solid var(--border);border-radius:var(--rs);padding:9px 12px;font-size:13px;color:var(--text);background:var(--bg);font-family:inherit;margin-bottom:7px;}
+.ai:focus{outline:none;border-color:#6d28d9;}
+.ar2{display:flex;gap:8px;}
+.as2{flex:1;padding:10px;background:var(--dark2);color:white;border:none;border-radius:var(--rs);font-size:13px;font-weight:600;cursor:pointer;}
+.ac2{padding:10px 14px;background:var(--bg);color:var(--muted);border:1px solid var(--border);border-radius:var(--rs);font-size:13px;cursor:pointer;}
+.sp{height:30px;}
 </style>
 </head>
 <body>
-
-<!-- ── PANTALLA DE CONFIGURACIÓN ── -->
-<div id="setup-screen">
-  <div class="icon">✈️</div>
-  <h1>Europa 2026</h1>
-  <p>Pegá la URL de tu Apps Script para conectar la app con tu Google Sheet en tiempo real.</p>
-  <input type="url" id="script-url" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
-  <button onclick="conectar()">Conectar con mi Sheet →</button>
-  <div class="hint">
-    <strong>¿Cómo obtener la URL?</strong><br>
-    1. Google Sheet → <strong>Extensiones → Apps Script</strong><br>
-    2. Pegá el código que te dio Claude<br>
-    3. <strong>Implementar → Nueva implementación</strong><br>
-    4. Tipo: App web · Acceso: <strong>Cualquier persona</strong><br>
-    5. Copiá la URL que aparece y pegala arriba
-  </div>
-</div>
-
-<!-- ── LOADING ── -->
-<div id="loading" style="display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:16px;">
-  <div class="spinner"></div>
-  <p style="color:var(--muted);font-size:14px">Cargando tu viaje...</p>
-</div>
-
-<!-- ── APP PRINCIPAL ── -->
-<div id="app" style="display:none;flex-direction:column;height:100vh;">
-  <div class="header">
-    <div class="header-top">
-      <div>
-        <div class="app-name">Europa 2026 ✈</div>
-        <div class="app-sub">26 abr — jun 2026 · 2 viajeras</div>
-      </div>
-      <button class="refresh-btn" onclick="recargar()">↻ Actualizar</button>
-    </div>
-    <div class="city-strip" id="city-strip">
-      <button class="city-chip active" onclick="filtrarCiudad('all', this)">Todo</button>
+<div class="screen active" id="screen-home">
+  <div class="home-hdr">
+    <div class="home-title">Europa 2026 ✈</div>
+    <div class="home-sub">Tamar & Andrés · 26 abr — 21 jun 2026</div>
+    <div class="stats">
+      <div class="stat"><div class="sv">10</div><div class="sl">ciudades</div></div>
+      <div class="stat"><div class="sv">57</div><div class="sl">días</div></div>
+      <div class="stat"><div class="sv">44</div><div class="sl">docs Drive</div></div>
     </div>
   </div>
-
-  <div class="nav">
-    <div class="nav-tab active" onclick="showTab('itinerario', this)">Itinerario</div>
-    <div class="nav-tab" onclick="showTab('logistica', this)">Logística</div>
-    <div class="nav-tab" onclick="showTab('presupuesto', this)">Presupuesto</div>
-    <div class="nav-tab" onclick="showTab('equipaje', this)">Equipaje</div>
-    <div class="nav-tab" onclick="showTab('sitios', this)">Sitios</div>
-  </div>
-
-  <div class="content">
-    <div class="section active" id="sec-itinerario"><p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Cargando...</p></div>
-    <div class="section" id="sec-logistica"></div>
-    <div class="section" id="sec-presupuesto"></div>
-    <div class="section" id="sec-equipaje"></div>
-    <div class="section" id="sec-sitios"></div>
-  </div>
+  <div class="cities" id="city-list"></div>
+  <div class="sp"></div>
 </div>
-
+<div class="screen" id="screen-city">
+  <div class="city-hdr">
+    <button class="back" onclick="goHome()">‹ Inicio</button>
+    <div class="cht" id="city-title"></div>
+    <div class="chd" id="city-dates"></div>
+  </div>
+  <div class="city-body" id="city-body"></div>
+  <div class="sp"></div>
+</div>
 <script>
-// ── ESTADO ──
-let DATA = null;
-let currentCity = 'all';
-const checkState = JSON.parse(localStorage.getItem('europa_checks') || '{}');
-const SCRIPT_URL_KEY = 'europa_script_url';
+const HOME=[
+  {k:'madrid',e:'🇪🇸',n:'Madrid',d:'27 abr — 30 abr · 3 noches',chips:[{t:'✈ Llegan 14:30',c:'cf'},{t:'🏨 Hotel Nido',c:'ch'},{t:'Prado · Rey León',c:'ca'}]},
+  {k:'paris',e:'🇫🇷',n:'París',d:'30 abr — 4 may · 4 noches',chips:[{t:'✈ Llegan 13:25',c:'cf'},{t:'🏨 Hotel Du Midi',c:'ch'},{t:'4 actividades',c:'ca'}]},
+  {k:'annecy',e:'🏔',n:'Annecy',d:'4 may — 6 may · 2 noches',chips:[{t:'🚄 Llegan 13:29',c:'ct'},{t:'🏨 Estudio Albigny',c:'ch'}]},
+  {k:'ginebra',e:'🇨🇭',n:'Ginebra',d:'6 may — 7 may · 1 noche',chips:[{t:'🚌 Llegan 11:55',c:'cb'},{t:'🏨 Rue du Stand',c:'ch'},{t:'CERN',c:'ca'}]},
+  {k:'roma',e:'🇮🇹',n:'Roma',d:'7 may — 12 may · 5 noches',chips:[{t:'✈ Llegan 13:10',c:'cf'},{t:'🏨 Testaccio',c:'ch'},{t:'Vaticano · Coliseo',c:'ca'}]},
+  {k:'florencia',e:'🌸',n:'Florencia',d:'12 may — 16 may · 4 noches',chips:[{t:'🚄 Llegan 10:31',c:'ct'},{t:'🏨 Mattonaia',c:'ch'}]},
+  {k:'venecia',e:'🚤',n:'Venecia',d:'16 may — 18 may · 2 noches',chips:[{t:'🚄 Llegan 12:55',c:'ct'},{t:"🏨 Ca' Luisa",c:'ch'}]},
+  {k:'barcelona',e:'🎨',n:'Barcelona',d:'18 may — 19 jun · 33 noches',chips:[{t:'✈ Desde Venecia',c:'cf'},{t:'🏨 Relax Apartment',c:'ch'},{t:'⚠ Regreso pendiente',c:'cp'}]},
+  {k:'alicante',e:'🌊',n:'Alicante',d:'30 may — 1 jun · desde Barcelona',chips:[{t:'✈ Vueling VY1300',c:'cf'},{t:'🏠 Casa de amiga',c:'ch'}]},
+  {k:'belgrado',e:'🎭',n:'Belgrado',d:'5 jun — 8 jun · desde Barcelona',chips:[{t:'✈ Air Serbia JU581',c:'cf'},{t:'🎶 Tango Encuentro',c:'ca'},{t:'🏠 Amigo local',c:'ch'}]},
+];
 
-// ── INICIAR ──
-window.onload = () => {
-  const saved = localStorage.getItem(SCRIPT_URL_KEY);
-  if (saved) {
-    document.getElementById('script-url').value = saved;
-    cargar(saved);
-  }
+document.getElementById('city-list').innerHTML=HOME.map(c=>`
+<div class="cc" onclick="goCity('${c.k}')">
+  <div class="cc-top"><div class="cc-emoji">${c.e}</div><div><div class="cc-name">${c.n}</div><div class="cc-dates">${c.d}</div></div><span style="color:var(--muted);font-size:20px">›</span></div>
+  <div class="cc-chips">${c.chips.map(ch=>`<span class="chip ${ch.c}">${ch.t}</span>`).join('')}</div>
+</div>`).join('');
+
+// ─── CITY DATA ───────────────────────────────────────────
+const C={
+madrid:{name:'🇪🇸 Madrid',dates:'27 abr — 30 abr · 3 noches',
+tr:{icon:'✈️',lbl:'Iberia IB0108 · BsAs → Madrid',dep:'26 abr · 21:40 — EZE Terminal P',arr:'27 abr · 14:30 — MAD',
+rows:[['Vuelo','IB0108 · Iberia'],['Booking','LJE28',1],['Asientos','Tamar 21B · Andrés 21A'],['Equipaje','Sin bagaje (tarifa light)']],
+btns:[['🎫 Ticket Tamar','https://drive.google.com/file/d/1RwGbOIQkXNUlBbkt1YWg-4Ylh7coC32X/view','bb'],['🎫 Ticket Andrés','https://drive.google.com/file/d/1gs05uxcrMXnQ1DXH7Cxil7gYLk_bwQ1r/view','bb'],['📍 Aero EZE','https://maps.google.com/?q=Aeropuerto+Internacional+Ezeiza','bg2'],['📍 Aero MAD','https://maps.google.com/?q=Aeropuerto+Barajas+Madrid','bg2']]},
+ho:{icon:'🏨',name:'Hotel Nido Príncipe Pío',
+rows:[['Dirección','5 Paseo de la Florida, Moncloa-Aravaca'],['Check-in','27 abr · desde 14:00'],['Check-out','30 abr · hasta 12:00'],['Noches','3 noches']],
+btns:[['📄 Ver reserva','https://drive.google.com/file/d/1pJU-W8Hl2SyL86E5LYkzoIiig5YbRpJN/view','bb'],['🗺 Maps','https://maps.google.com/?q=5+Paseo+de+la+Florida+Madrid','bg2']]},
+acts:[
+{n:'Museo del Prado 📄',d:'Ver entrada en Drive',pdf:'https://drive.google.com/file/d/1JX_ljHfNxUfvwYnY_BCcemjP5RJLgRH_/view',maps:'https://maps.google.com/?q=Museo+del+Prado+Madrid'},
+{n:'El Rey León 🎭',d:'Ver entradas en Drive',pdf:'https://drive.google.com/file/d/1peodRsPQfQOLhVMH45wXBy0E0syGZGlf/view',maps:'https://maps.google.com/?q=Teatro+Lope+de+Vega+Madrid'},
+{n:'Gran Vía · Retiro · Sol',d:'Explorar el centro',maps:'https://maps.google.com/?q=Gran+Via+Madrid'},
+{n:'Mercado San Miguel',d:'Tapas y vinos',maps:'https://maps.google.com/?q=Mercado+San+Miguel+Madrid'}],
+nk:'n_madrid'},
+
+paris:{name:'🇫🇷 París',dates:'30 abr — 4 may · 4 noches',
+tr:{icon:'✈️',lbl:'Iberia IB0573 · Madrid → París ORY',dep:'30 abr · 11:25 — MAD Terminal 4',arr:'30 abr · 13:25 — ORY Terminal 1',
+rows:[['Vuelo','IB0573 · Iberia'],['Booking','KJSFW',1],['Asientos','Tamar 21B · Andrés 21A'],['⚠ Nota','Aterriza en Orly (ORY)']],
+btns:[['🎫 Ticket Tamar','https://drive.google.com/file/d/1_tzZ4amIbeQ8dAQwMWb15xCSMPOGfl-1/view','bb'],['🎫 Ticket Andrés','https://drive.google.com/file/d/1ht_j3CsMT9iARVCG1-nmN1yzT9-EpUPM/view','bb'],['📍 Aero Orly','https://maps.google.com/?q=Aeropuerto+Orly+Paris','bg2']]},
+ho:{icon:'🏨',name:'Hôtel Du Midi Montparnasse',
+rows:[['Dirección','4 Av. René Coty, 75014 París'],['Tel hotel','+33 1 43 27 23 25'],['Confirmación','5671.711.267 · PIN 7362',1],['Check-in','30 abr · desde 14:00'],['Check-out','4 may · hasta 11:00'],['Noches','4 noches · USD 702']],
+btns:[['📄 Ver reserva','https://drive.google.com/file/d/1XvrMNB3LRYikH-sHCPc8Fx8LHFJXvIiJ/view','bb'],['📞 Llamar','tel:+33143272325','bd'],['🗺 Maps','https://maps.google.com/?q=4+Avenue+René+Coty+Paris+75014','bg2']]},
+acts:[
+{n:'Museo D\'Orsay 📄',d:'30 abr · 16:30hs · Acceso 1 por el Quai · ⚠ llegar puntual',pdf:'https://drive.google.com/file/d/1T1BNVwMd3JeHC7Xz8JQfiU4J9RCK1vAD/view',pdf2:'https://drive.google.com/file/d/1RP24ii82O5DrlldMZJJFTUaSRvscR-Cx/view',maps:'https://maps.google.com/?q=Musée+d+Orsay+Paris'},
+{n:'Crucero Río Sena 📄',d:'30 abr · 20:45hs · Vedettes du Pont Neuf · Presentarse 15min antes · Incluye champán',pdf:'https://drive.google.com/file/d/1tkWhiQymn-H2bd8hsCRgypdy2Yb8GkR4/view',maps:'https://maps.google.com/?q=Vedettes+du+Pont+Neuf+Paris+Square+du+Vert+Galant'},
+{n:'Versalles 📄',d:'2 may · 11:00hs · Entrada A Pavillon Dufour · Tamar pl.258, Andrés pl.255',pdf:'https://drive.google.com/file/d/1nuxqEpORLVeQiAm3VD7urC-axfEfWLMv/view',pdf2:'https://drive.google.com/file/d/1zGuMfoDSkIYUc38N67pLVwSinh7jhzJB/view',maps:'https://maps.google.com/?q=Chateau+de+Versailles'},
+{n:'Torre Eiffel 📄',d:'3 may · 22:00hs · 2° piso ascensor · Llegar 15-20min antes · €23.50 c/u',pdf:'https://drive.google.com/file/d/13CcPp8pYuokmrJUCHjSOG1HNUkNhZtRW/view',maps:'https://maps.google.com/?q=Tour+Eiffel+Paris'},
+{n:'Notre Dame · Montmartre · Le Marais',d:'A coordinar durante la estadía',maps:'https://maps.google.com/?q=Notre+Dame+Cathedral+Paris'}],
+nk:'n_paris'},
+
+annecy:{name:'🏔 Annecy',dates:'4 may — 6 may · 2 noches',
+tr:{icon:'🚄',lbl:'TGV INOUI 6937 · París → Annecy',dep:'4 may · 09:46 — París Gare de Lyon',arr:'4 may · 13:29 — Annecy',
+rows:[['Tren','TGV INOUI 6937 · 1ª clase'],['Expediente','9TPJNP',1],['Tamar','Coche 2 Alto · Plaza 258'],['Andrés','Coche 2 Alto · Plaza 255'],['Duración','3h 43min']],
+btns:[['🎫 Ticket Tamar','https://drive.google.com/file/d/18EZJf40Q00y9QyNHqfUEBLquVsv-zO6L/view','bb'],['🎫 Ticket Andrés','https://drive.google.com/file/d/1ukUx7m9kscVeFGTQ1JkTd27zbaXkqdyz/view','bb'],['📍 Gare de Lyon','https://maps.google.com/?q=Paris+Gare+de+Lyon','bg2'],['📍 Estación Annecy','https://maps.google.com/?q=Gare+Annecy','bg2']]},
+ho:{icon:'🏨',name:'Estudio Albigny Préfecture',
+rows:[['Zona','Albigny - Préfecture, Annecy'],['Confirmación','HMHYFK8E4B',1],['Anfitrión','Muriel Et Eric'],['Check-in','4 may · desde 16:00'],['Check-out','6 may · hasta 11:00'],['Noches','2 noches · USD 274']],
+btns:[['📄 Ver Airbnb','https://drive.google.com/file/d/1ERmyUEk9TIoI_wYkAbmlvzbnBLdQ67Mp/view','bb'],['🗺 Maps','https://maps.google.com/?q=Annecy+Albigny+Prefecture','bg2']]},
+acts:[
+{n:'Lago de Annecy',d:'El más limpio de Europa · Paseo en bote',maps:'https://maps.google.com/?q=Lac+d+Annecy'},
+{n:'Pueblo viejo',d:'Canales y mercadillo medieval',maps:'https://maps.google.com/?q=Vieille+Ville+Annecy'}],
+nk:'n_annecy'},
+
+ginebra:{name:'🇨🇭 Ginebra',dates:'6 may — 7 may · 1 noche',
+tr:{icon:'🚌',lbl:'FlixBus N706 · Annecy → Ginebra',dep:'6 may · 11:05 — Annecy (3 Place de la Gare)',arr:'6 may · 11:55 — Geneva (Place Dorcière)',
+rows:[['Bus','FlixBus Ruta N706'],['Reserva','331 493 5911',1],['Pasajeros','Tamar + Andrés'],['⚠ Nota','Llevar pasaporte para cruzar frontera']],
+btns:[['🎫 Ver ticket','https://drive.google.com/file/d/1q_1-QgQA0i7SQc-orln-p6ZlVZhZUJph/view','bb'],['📍 Parada Annecy','https://maps.google.com/?q=3+Place+de+la+Gare+74000+Annecy','bg2'],['📍 Parada Ginebra','https://maps.google.com/?q=Place+Dorciere+1201+Geneva','bg2']]},
+ho:{icon:'🏨',name:'Apartamento centro Ginebra',
+rows:[['Dirección','Rue du Stand 9, piso 4, apto 414, Ginebra 1204'],['Tel anfitrión','+41 78 822 96 87'],['Confirmación','HM9ZJEHTWS',1],['Anfitrión','Andres'],['Check-in','6 may · desde 15:00'],['Check-out','7 may · hasta 11:00'],['Noches','1 noche · USD 161']],
+btns:[['📄 Ver Airbnb','https://drive.google.com/file/d/1eg-_RYnW6qur6x7rHpCWPRjQBYdddFHN/view','bb'],['📞 Llamar','+41788229687','bd'],['🗺 Maps','https://maps.google.com/?q=Rue+du+Stand+9+Geneva+1204','bg2']]},
+acts:[
+{n:'Tour CERN 📄',d:'6 may · Entrada confirmada · Gratuito',pdf:'https://drive.google.com/file/d/1DSODj13oYddfjbsX5ctrjQP9kET5SjPi/view',maps:'https://maps.google.com/?q=CERN+Geneva'},
+{n:"Jet d'eau · Lago Lemán",d:'Paseo por el centro histórico',maps:'https://maps.google.com/?q=Jet+d+Eau+Geneva'}],
+nk:'n_ginebra'},
+
+roma:{name:'🇮🇹 Roma',dates:'7 may — 12 may · 5 noches',
+tr:{icon:'✈️',lbl:'ITA Airways AZ575 · Ginebra → Roma',dep:'7 may · 11:40 — GVA Terminal 1',arr:'7 may · 13:10 — Roma Fiumicino FCO T1',
+rows:[['Vuelo','AZ575 · ITA Airways'],['Booking','YZ7EAM',1],['Duración','1h 30min'],['Equipaje','Sin bagaje (tarifa light)']],
+btns:[['🎫 Ticket Tamar','https://drive.google.com/file/d/1ptT910N_kD0_UBrMhENx_nNDt5MFY8J5/view','bb'],['🎫 Ticket Andrés','https://drive.google.com/file/d/1_kGXrL_R_r9WFpUii0-efmMUq1yGgeQk/view','bb'],['📍 Aero Ginebra','https://maps.google.com/?q=Geneva+Airport','bg2'],['📍 Fiumicino FCO','https://maps.google.com/?q=Aeroporto+Fiumicino+Roma','bg2']]},
+ho:{icon:'🏨',name:'Break & Fest Roma – Testaccio',
+rows:[['Dirección','Via Luca della Robbia 80, Scala B Int.211, Piano 1, Roma 00153'],['Tel anfitrión','+39 339 232 9015'],['Anfitrión','Loredana'],['Confirmación','HMFTSZ8EYD',1],['Check-in','7 may · desde 15:00'],['Check-out','12 may · hasta 11:00'],['Noches','5 noches · USD 835']],
+btns:[['📄 Ver Airbnb','https://drive.google.com/file/d/1XGA7KhMxJhWG_6i3Cpgi99gTaafztMLj/view','bb'],['📞 Llamar','tel:+393392329015','bd'],['🗺 Maps','https://maps.google.com/?q=Via+Luca+della+Robbia+80+Roma+00153','bg2']]},
+acts:[
+{n:'Museos Vaticanos 📄',d:'8 may · 11:30hs · Acceso Passageway 1 · Llevar DNI · €25 c/u',pdf:'https://drive.google.com/file/d/1GByRheVYI-fK1e0p14FYoZbumuAIO653/view',maps:'https://maps.google.com/?q=Musei+Vaticani+Rome'},
+{n:'Coliseo 📄',d:'Ver entrada en Drive',pdf:'https://drive.google.com/file/d/1b4gnpth9bHR5EkHWTswi5-BV4x2_NQ43/view',maps:'https://maps.google.com/?q=Colosseum+Rome'},
+{n:'Fontana di Trevi',d:'Gratuito · Ir temprano',maps:'https://maps.google.com/?q=Fontana+di+Trevi+Roma'},
+{n:'Trastevere',d:'Barrio histórico · Ideal de noche',maps:'https://maps.google.com/?q=Trastevere+Roma'}],
+nk:'n_roma'},
+
+florencia:{name:'🌸 Florencia',dates:'12 may — 16 may · 4 noches',
+tr:{icon:'🚄',lbl:'Italo 8906 · Roma → Florencia',dep:'12 may · 08:55 — Roma Termini',arr:'12 may · 10:31 — Firenze S.M.N.',
+rows:[['Tren','Italo 8906 · Prima Business'],['Código','MB5JKF',1],['Tamar','Coche 2 · Plaza 16 · Fast Track'],['Andrés','Coche 2 · Plaza 15 · Fast Track'],['Duración','1h 36min']],
+btns:[['🎫 Ver tickets','https://drive.google.com/file/d/1BDaOt-s8rqmLG6deZw03SZ3F7P9AXpeF/view','bb'],['📍 Roma Termini','https://maps.google.com/?q=Roma+Termini','bg2'],['📍 Firenze S.M.N.','https://maps.google.com/?q=Stazione+Firenze+Santa+Maria+Novella','bg2']]},
+ho:{icon:'🏨',name:'Mattonaia s. Ambrogio',
+rows:[['Dirección','Via della Mattonaia 46, Florencia 50121'],['Tel anfitrión','+39 333 834 7837'],['Anfitrión','Alessandro'],['Confirmación','HMYN2J4Z9T',1],['Check-in','12 may · desde 15:00'],['Check-out','16 may · hasta 11:00'],['Noches','4 noches · USD 650']],
+btns:[['📄 Ver Airbnb','https://drive.google.com/file/d/15q8IAqzifSLJBgo4nxi_H4-RyelgTu2r/view','bb'],['📞 Llamar','tel:+393338347837','bd'],['🗺 Maps','https://maps.google.com/?q=Via+della+Mattonaia+46+Florence+50121','bg2']]},
+acts:[
+{n:'Uffizi',d:'Reservar online · imperdible',ext:'https://www.uffizi.it',maps:'https://maps.google.com/?q=Uffizi+Gallery+Florence'},
+{n:'Duomo · Cúpula Brunelleschi',d:'Reservar con anticipación',ext:'https://www.museumflorence.com',maps:'https://maps.google.com/?q=Duomo+Florence'},
+{n:'Ponte Vecchio',d:'Gratuito · Ir temprano',maps:'https://maps.google.com/?q=Ponte+Vecchio+Florence'},
+{n:'Piazzale Michelangelo',d:'Mejor panorámica · Atardecer',maps:'https://maps.google.com/?q=Piazzale+Michelangelo+Florence'}],
+nk:'n_florencia'},
+
+venecia:{name:'🚤 Venecia',dates:'16 may — 18 may · 2 noches',
+tr:{icon:'🚄',lbl:'Italo 8906 · Florencia → Venecia',dep:'16 may · 10:39 — Firenze S.M.N.',arr:'16 may · 12:55 — Venezia Santa Lucia',
+rows:[['Tren','Italo 8906 · Prima Business'],['Código','XGYS7T',1],['Tamar','Coche 3 · Plaza 20'],['Andrés','Coche 3 · Plaza 17'],['Duración','2h 16min']],
+btns:[['🎫 Ver tickets','https://drive.google.com/file/d/1qAeBa_44OHUsskZHtrd44WSyyFj4GhsD/view','bb'],['📍 Firenze S.M.N.','https://maps.google.com/?q=Stazione+Firenze+Santa+Maria+Novella','bg2'],['📍 Venezia S. Lucia','https://maps.google.com/?q=Stazione+Venezia+Santa+Lucia','bg2']]},
+ho:{icon:'🏨',name:"Ca' Luisa — Cannaregio",
+rows:[['Dirección','Rio Terà S. Leonardo 1371, Cannaregio, Venecia'],['Tel','+39 342 980 5727'],['Confirmación','5552.929.112 · PIN 2627',1],['Check-in','16 may · desde 14:00'],['Check-out','18 may · hasta 11:00'],['Noches','2 noches · USD 556'],['Nota','Avisar hora de llegada de antemano']],
+btns:[['📄 Ver reserva','https://drive.google.com/file/d/1wCDS6G6822Kqx9zvZM8VOu6uPnm0ZYmF/view','bb'],['📞 Llamar','tel:+393429805727','bd'],['🗺 Maps','https://maps.google.com/?q=Rio+Tera+S+Leonardo+1371+Venice','bg2']]},
+acts:[
+{n:'Gran Canal · Vaporetto',d:'Línea 1 — el paseo más bello',maps:'https://maps.google.com/?q=Canal+Grande+Venice'},
+{n:'Plaza San Marcos · Basílica',d:'Ir muy temprano',maps:'https://maps.google.com/?q=Piazza+San+Marco+Venice'},
+{n:'Rialto y callejuelas',d:'Perderse es el plan',maps:'https://maps.google.com/?q=Rialto+Bridge+Venice'},
+{n:'Murano / Burano',d:'Vaporetto desde Fondamente Nove',maps:'https://maps.google.com/?q=Murano+Island+Venice'}],
+nk:'n_venecia'},
+
+barcelona:{name:'🎨 Barcelona',dates:'18 may — 19 jun · 33 noches',
+tr:{icon:'✈️',lbl:'Vuelo Venecia → Barcelona',dep:'18 may · a confirmar — VCE',arr:'18 may · a confirmar — BCN',
+rows:[['Vuelo ida','Venecia → Barcelona'],['Estado','⚠ Confirmar horarios exactos'],['Regreso BCN→MAD','⚠ PENDIENTE'],['Madrid→BsAs','IB0101 · 20 jun 23:59 → 21 jun 07:35'],['Booking regreso','LJE28',1]],
+btns:[['🎫 Ticket Tamar','https://drive.google.com/file/d/1pessqWTw0m84pb2ZBTWnmO4dw65XWc3p/view','bb'],['🎫 Ticket Andrés','https://drive.google.com/file/d/1YCg2RLMT1DKlV5OzNl6E3nYJV9G5__tD/view','bb'],['📍 Aero BCN','https://maps.google.com/?q=Aeropuerto+El+Prat+Barcelona','bg2'],['✈ Buscar regreso','https://www.skyscanner.com','bpend']]},
+ho:{icon:'🏨',name:'Apartamento Relax Barcelona',
+rows:[['Dirección',"Carrer d'Hondures 42, 4-2, Barcelona 08027"],['Tel anfitrión','+34 609 31 47 66'],['Anfitrión','Raquel'],['Confirmación','HMQ3CZP3JY',1],['Check-in','18 may · desde 11:00'],['Check-out','19 jun · hasta 11:00'],['Noches','33 noches · USD 2.800']],
+btns:[['📄 Ver Airbnb','https://drive.google.com/file/d/1jbtwLvY9PaZRg3sokbkOc9sk_XouljQa/view','bb'],['📞 Llamar','tel:+34609314766','bd'],['🗺 Maps',"https://maps.google.com/?q=Carrer+d+Hondures+42+Barcelona+08027",'bg2']]},
+acts:[
+{n:'Sagrada Família',d:'Reservar online',ext:'https://sagradafamilia.org',maps:'https://maps.google.com/?q=Sagrada+Familia+Barcelona'},
+{n:'Park Güell',d:'Tickets online requeridos',ext:'https://parkguell.barcelona',maps:'https://maps.google.com/?q=Park+Güell+Barcelona'},
+{n:'Camp Nou',d:'Tour del estadio',maps:'https://maps.google.com/?q=Camp+Nou+Barcelona'},
+{n:'Barceloneta',d:'Playa · Paseo marítimo',maps:'https://maps.google.com/?q=Barceloneta+Beach'},
+{n:'El Born · Barrio Gótico',d:'A pie',maps:'https://maps.google.com/?q=Gothic+Quarter+Barcelona'}],
+nk:'n_barcelona'},
+
+alicante:{name:'🌊 Alicante',dates:'30 may — 1 jun · desde Barcelona',
+tr:{icon:'✈️',lbl:'Vueling VY1300 · Barcelona → Alicante',dep:'30 may · 08:30 — BCN',arr:'30 may · 09:45 — ALC',
+rows:[['Vuelo ida','VY1300 · Vueling'],['Horario ida','30 may · 08:30 BCN → 09:45 ALC'],['Vuelo vuelta','VY1309 · Vueling'],['Horario vuelta','1 jun · 09:10 ALC → 10:25 BCN'],['Nota','Reserva gestionada por Andrés']],
+btns:[['📍 Aero BCN T2','https://maps.google.com/?q=Aeropuerto+El+Prat+Barcelona','bg2'],['📍 Aero Alicante','https://maps.google.com/?q=Aeropuerto+Alicante+Elche','bg2']]},
+ho:{icon:'🏠',name:'Casa de amiga en Alicante',
+rows:[['Tipo','Hospedaje con amiga local'],['Check-in','30 may · tarde'],['Check-out','1 jun · mañana'],['Noches','2 noches']],
+btns:[['🗺 Centro Alicante','https://maps.google.com/?q=Alicante+Spain+center','bg2']]},
+acts:[
+{n:'Playa del Postiguet',d:'La playa más famosa · a pasos del centro',maps:'https://maps.google.com/?q=Playa+del+Postiguet+Alicante'},
+{n:'Castillo de Santa Bárbara',d:'Vista panorámica · Ascensor gratuito',maps:'https://maps.google.com/?q=Castillo+Santa+Barbara+Alicante'},
+{n:'Casco histórico El Barrio',d:'Tapas y ambiente',maps:'https://maps.google.com/?q=El+Barrio+Alicante'},
+{n:'Isla de Tabarca',d:'Excursión en barco · snorkeling',maps:'https://maps.google.com/?q=Isla+Tabarca+Alicante'}],
+nk:'n_alicante'},
+
+belgrado:{name:'🎭 Belgrado',dates:'5 jun — 8 jun · desde Barcelona',
+tr:{icon:'✈️',lbl:'Air Serbia JU581 · Barcelona → Belgrado',dep:'5 jun · 09:55 — BCN Terminal 2',arr:'5 jun · 12:30 — BEG Terminal 2',
+rows:[['Vuelo ida','JU581 · Air Serbia'],['Asientos ida','Tamar 12B · Andrés 12A'],['Vuelo vuelta','JU584 · Air Serbia'],['Horario vuelta','8 jun · 17:10 BEG → 19:50 BCN'],['Asientos vuelta','Tamar 15B · Andrés 15A'],['Booking','KZSOUF',1]],
+btns:[['🎫 Ticket Tamar','https://drive.google.com/file/d/1_X70rsN5ntHrOpEvSc50KzWyXxfGIRjJ/view','bb'],['🎫 Ticket Andrés','https://drive.google.com/file/d/1xw0D81ctGTZ2ZRdBZXpHcZCU5wJ4LQIR/view','bb'],['📍 Aero BCN','https://maps.google.com/?q=Aeropuerto+El+Prat+Barcelona','bg2'],['📍 Aero Belgrado','https://maps.google.com/?q=Nikola+Tesla+Airport+Belgrade','bg2']]},
+ho:{icon:'🏠',name:'Hospedaje con amigo local',
+rows:[['Tipo','Casa de amigo local en Belgrado'],['Check-in','5 jun · tarde'],['Check-out','8 jun · mañana'],['Noches','3 noches'],['Gestión','Lo coordina el amigo de Andrés']],
+btns:[['🗺 Centro Belgrado','https://maps.google.com/?q=Belgrade+Serbia+city+center','bg2']]},
+acts:[
+{n:'Belgrade Tango Encuentro 📄',d:'Entradas confirmadas · Tamar + Andrés',pdf:'https://drive.google.com/file/d/1-Xa7_gJdwRqqGsddxzpZwG6xawZ18TVm/view',pdf2:'https://drive.google.com/file/d/1JWtTg0wBUfRJharZMsEItb_zQ2lSiQur/view'},
+{n:'Fortaleza de Kalemegdan',d:'Vista al Sava y Danubio · imperdible',maps:'https://maps.google.com/?q=Kalemegdan+Fortress+Belgrade'},
+{n:'Skadarlija',d:'Barrio bohemio · bares y música en vivo',maps:'https://maps.google.com/?q=Skadarlija+Belgrade'},
+{n:'Knez Mihailova',d:'Calle peatonal principal · paseo nocturno',maps:'https://maps.google.com/?q=Knez+Mihailova+Belgrade'}],
+nk:'n_belgrado'}
 };
 
-async function conectar() {
-  const url = document.getElementById('script-url').value.trim();
-  if (!url) return alert('Pegá la URL primero');
-  localStorage.setItem(SCRIPT_URL_KEY, url);
-  await cargar(url);
+function goCity(k){
+  const c=C[k];
+  document.getElementById('city-title').textContent=c.name;
+  document.getElementById('city-dates').textContent=c.dates;
+  document.getElementById('city-body').innerHTML=buildCity(k,c);
+  document.getElementById('screen-home').classList.remove('active');
+  document.getElementById('screen-city').classList.add('active');
+  window.scrollTo(0,0);
+  const n=localStorage.getItem(c.nk)||'';
+  const el=document.getElementById('nta');
+  if(el) el.value=n;
+  renderCA(k);
 }
-
-async function recargar() {
-  const url = localStorage.getItem(SCRIPT_URL_KEY);
-  if (url) await cargar(url);
+function goHome(){
+  document.getElementById('screen-city').classList.remove('active');
+  document.getElementById('screen-home').classList.add('active');
+  window.scrollTo(0,0);
 }
-
-async function cargar(url) {
-  document.getElementById('setup-screen').style.display = 'none';
-  const loading = document.getElementById('loading');
-  loading.style.display = 'flex';
-  try {
-    const res = await fetch(url);
-    const json = await res.json();
-    DATA = json;
-    loading.style.display = 'none';
-    const app = document.getElementById('app');
-    app.style.display = 'flex';
-    buildCityStrip();
-    renderAll();
-  } catch(e) {
-    loading.style.display = 'none';
-    document.getElementById('setup-screen').style.display = 'flex';
-    alert('No se pudo conectar. Verificá que la URL sea correcta y que el acceso sea "Cualquier persona".\n\nError: ' + e.message);
-  }
-}
-
-// ── TABS ──
-function showTab(tab, el) {
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('sec-' + tab).classList.add('active');
-}
-
-// ── CIUDADES ──
-function buildCityStrip() {
-  if (!DATA || !DATA.budget) return;
-  const ciudades = [...new Set(DATA.budget.map(r => r.pais || r.lugar).filter(Boolean))];
-  const strip = document.getElementById('city-strip');
-  // Ciudades únicas del itinerario
-  const nombres = ['Madrid','París','Annecy','Ginebra','Roma','Florencia','Venecia','Barcelona'];
-  const emojis  = { Madrid:'🇪🇸', París:'🇫🇷', Annecy:'🏔', Ginebra:'🇨🇭', Roma:'🇮🇹', Florencia:'🌸', Venecia:'🚤', Barcelona:'🎨' };
-  nombres.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'city-chip';
-    btn.textContent = (emojis[c] || '') + ' ' + c;
-    btn.onclick = function() { filtrarCiudad(c, this); };
-    strip.appendChild(btn);
-  });
-}
-
-function filtrarCiudad(city, el) {
-  currentCity = city;
-  document.querySelectorAll('.city-chip').forEach(c => c.classList.remove('active'));
-  el.classList.add('active');
-  renderAll();
-}
-
-// ── RENDER HELPERS ──
-function getTagClass(tipo) {
-  const m = { 'Vuelo':'tag-vuelo','Tren':'tag-tren','Bus':'tag-bus','hospedaje':'tag-hospedaje','Actividad':'tag-actividad' };
-  return m[tipo] || 'tag-actividad';
-}
-function getIcon(tipo, cat) {
-  if (tipo === 'Vuelo') return '✈️';
-  if (tipo === 'Tren') return '🚄';
-  if (tipo === 'Bus') return '🚌';
-  if (cat === 'hospedaje') return '🏨';
-  if (cat === 'Actividad') return '🎟';
-  return '📌';
-}
-function getIconBg(tipo, cat) {
-  if (tipo === 'Vuelo') return '#dbeafe';
-  if (tipo === 'Tren') return '#dcfce7';
-  if (tipo === 'Bus') return '#fef3c7';
-  if (cat === 'hospedaje') return '#ede9fe';
-  return '#fee2e2';
-}
-
-// ── ITINERARIO ──
-function renderItinerario() {
-  if (!DATA) return;
-  const budget = DATA.budget || [];
-  // Filtrar por ciudad si aplica
-  const filtered = currentCity === 'all' ? budget : budget.filter(r => {
-    const desc = (r.descripcion || '').toLowerCase();
-    const lugar = (r.lugar || '').toLowerCase();
-    return desc.includes(currentCity.toLowerCase()) || lugar.includes(currentCity.toLowerCase());
-  });
-
-  // Agrupar por ciudad detectada
-  const cityMap = {
-    'Madrid':['madrid'], 'París':['paris','parís'], 'Annecy':['annecy'],
-    'Ginebra':['ginebra'], 'Roma':['roma'], 'Florencia':['florencia'],
-    'Venecia':['venecia'], 'Barcelona':['barcelona']
-  };
-  function detectCity(row) {
-    const s = (row.descripcion + ' ' + row.lugar + ' ' + row.pais).toLowerCase();
-    for (const [city, keys] of Object.entries(cityMap)) {
-      if (keys.some(k => s.includes(k))) return city;
+function buildCity(k,c){
+  let h='';
+  // TRANSPORT
+  const t=c.tr;
+  h+=sec('tr-'+k,t.icon,t.lbl,true,
+    `<div class="tb">🛫 ${t.dep} <span class="ta"> → ✈ ${t.arr}</span></div>`+
+    t.rows.map(r=>`<div class="ir"><div class="irl">${r[0]}</div><div class="irv${r[2]?' mono':''}">${r[1]}</div></div>`).join('')+
+    makeBtns(t.btns));
+  // HOTEL
+  const ho=c.ho;
+  h+=sec('ho-'+k,ho.icon,ho.name,true,
+    ho.rows.map(r=>`<div class="ir"><div class="irl">${r[0]}</div><div class="irv${r[2]?' mono':''}">${r[1]}</div></div>`).join('')+
+    makeBtns(ho.btns));
+  // ACTIVITIES
+  let actsH=c.acts.map(a=>{
+    let ab='';
+    if(a.pdf||a.pdf2||a.maps||a.ext){
+      ab='<div class="abtns">';
+      if(a.pdf) ab+=`<a href="${a.pdf}" target="_blank" class="abtn bb">📄 PDF Tamar</a>`;
+      if(a.pdf2) ab+=`<a href="${a.pdf2}" target="_blank" class="abtn bb">📄 PDF Andrés</a>`;
+      if(a.maps) ab+=`<a href="${a.maps}" target="_blank" class="abtn bg2">🗺 Maps</a>`;
+      if(a.ext) ab+=`<a href="${a.ext}" target="_blank" class="abtn bp">🌐 Ver</a>`;
+      ab+='</div>';
     }
-    return row.pais || 'Otros';
-  }
-
-  // Construir grupos
-  const grupos = {};
-  filtered.forEach(row => {
-    const city = detectCity(row);
-    if (!grupos[city]) grupos[city] = [];
-    grupos[city].push(row);
-  });
-
-  const emojis = { Madrid:'🇪🇸', París:'🇫🇷', Annecy:'🏔', Ginebra:'🇨🇭', Roma:'🇮🇹', Florencia:'🌸', Venecia:'🚤', Barcelona:'🎨', Otros:'📍' };
-  let html = '';
-
-  Object.entries(grupos).forEach(([city, rows]) => {
-    html += `<div class="sec-label">${emojis[city]||'📍'} ${city}</div>`;
-    rows.forEach((row, idx) => {
-      const isLast = idx === rows.length - 1;
-      const icon = getIcon(row.tipo, row.categoria);
-      const iconBg = getIconBg(row.tipo, row.categoria);
-      const tagClass = row.tipo ? getTagClass(row.tipo) : getTagClass(row.categoria);
-      const tagLabel = row.tipo || row.categoria;
-      const precio = row.preciox2 ? `USD ${Number(row.preciox2).toLocaleString()}` : (row.preciox1 ? `USD ${Number(row.preciox1).toLocaleString()} x1` : '');
-      html += `<div class="it-item">
-        <div class="it-line">
-          <div class="it-dot"></div>
-          ${!isLast ? '<div class="it-stem"></div>' : ''}
-        </div>
-        <div class="it-body">
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-            <span style="font-size:14px">${icon}</span>
-            <span style="font-size:13px;font-weight:600">${row.descripcion}</span>
-            <span class="tag ${tagClass}">${tagLabel}</span>
-          </div>
-          ${row.fecha ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${row.fecha}</div>` : ''}
-          <div style="font-size:12px;color:var(--muted);margin-top:3px">
-            ${row.lugar ? row.lugar.split('\\n')[0] + (precio ? ' · ' + precio : '') : precio}
-          </div>
-        </div>
-      </div>`;
-    });
-  });
-
-  document.getElementById('sec-itinerario').innerHTML = html || '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Sin eventos para esta ciudad</p>';
-}
-
-// ── LOGÍSTICA ──
-function renderLogistica() {
-  if (!DATA) return;
-  const budget = DATA.budget || [];
-  const isTransporte = r => ['Vuelo','Tren','Bus'].includes(r.tipo);
-  const isHospedaje  = r => r.categoria === 'hospedaje';
-
-  const transportes = budget.filter(r => isTransporte(r) && (currentCity === 'all' || (r.descripcion+r.lugar+r.pais).toLowerCase().includes(currentCity.toLowerCase())));
-  const hospedajes  = budget.filter(r => isHospedaje(r) && (currentCity === 'all' || (r.descripcion+r.lugar+r.pais).toLowerCase().includes(currentCity.toLowerCase())));
-
-  let html = '';
-  if (transportes.length) {
-    html += '<div class="sec-label">Transportes</div>';
-    transportes.forEach(r => {
-      const icon = getIcon(r.tipo, r.categoria);
-      const bg   = getIconBg(r.tipo, r.categoria);
-      html += `<div class="card"><div class="card-row">
-        <div class="card-icon" style="background:${bg}">${icon}</div>
-        <div style="flex:1">
-          <div class="card-title">${r.descripcion} <span class="tag ${getTagClass(r.tipo)}">${r.tipo}</span></div>
-          <div class="card-sub">${r.fecha || ''}</div>
-          <div class="card-detail">${r.preciox2 ? 'USD ' + Number(r.preciox2).toLocaleString() + ' (2 pax)' : r.preciox1 ? 'USD ' + Number(r.preciox1).toLocaleString() + ' x pax' : ''}</div>
-        </div></div></div>`;
-    });
-  }
-  if (hospedajes.length) {
-    html += '<div class="sec-label">Hospedajes</div>';
-    hospedajes.forEach(r => {
-      const addr = r.lugar.replace(/\\n/g, ' · ');
-      html += `<div class="card"><div class="card-row">
-        <div class="card-icon" style="background:#ede9fe">🏨</div>
-        <div style="flex:1">
-          <div class="card-title">${r.descripcion}</div>
-          <div class="card-sub">${r.fecha || ''}${r.dias ? ' · ' + r.dias + ' noches' : ''}</div>
-          <div class="card-detail">${addr}${r.preciox2 ? '<br>USD ' + Number(r.preciox2).toLocaleString() + ' total' : ''}</div>
-        </div></div></div>`;
-    });
-  }
-  document.getElementById('sec-logistica').innerHTML = html || '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Sin logística para esta ciudad</p>';
-}
-
-// ── PRESUPUESTO ──
-function renderPresupuesto() {
-  if (!DATA) return;
-  const budget = DATA.budget || [];
-  const dinero = DATA.dinero || [];
-
-  const pasajes = budget.filter(r => ['Vuelo','Tren','Bus'].includes(r.tipo));
-  const hospedajes = budget.filter(r => r.categoria === 'hospedaje');
-  const actividades = budget.filter(r => r.categoria === 'Actividad');
-
-  const sum = arr => arr.reduce((a, r) => a + (Number(r.preciox2) || Number(r.preciox1) || 0), 0);
-  const totalPas = sum(pasajes);
-  const totalHos = sum(hospedajes);
-  const totalAct = sum(actividades);
-  const totalGen = totalPas + totalHos + totalAct;
-
-  const totalUSD   = dinero.reduce((a,r) => a + (r.label !== 'Wise+dolarapp' && r.label !== 'cash' ? (r.usd || 0) : 0), 0);
-  const totalEuros = dinero.reduce((a,r) => a + (r.euros || 0), 0);
-
-  let html = `<div class="metrics">
-    <div class="metric"><div class="metric-label">Total estimado</div><div class="metric-value">USD ${totalGen.toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-label">Disponible</div><div class="metric-value">€ ${Math.round(totalEuros).toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-label">Pasajes</div><div class="metric-value" style="font-size:15px">USD ${totalPas.toLocaleString()}</div></div>
-    <div class="metric"><div class="metric-label">Hospedaje</div><div class="metric-value" style="font-size:15px">USD ${totalHos.toLocaleString()}</div></div>
+    return `<div class="act"><div class="adot"></div><div style="flex:1"><div class="aname">${a.n}</div><div class="adet">${a.d}</div>${ab}</div></div>`;
+  }).join('');
+  actsH+=`<div id="ca-${k}"></div>
+  <button class="btn bgr" style="width:100%;margin-top:10px" onclick="togAdd('${k}')">+ Agregar lugar o actividad</button>
+  <div class="af" id="af-${k}">
+    <input class="ai" id="ain-${k}" placeholder="Nombre del lugar o actividad">
+    <input class="ai" id="aid-${k}" placeholder="Detalle, horario, precio...">
+    <div class="ar2"><button class="as2" onclick="saveAct('${k}')">Guardar</button><button class="ac2" onclick="togAdd('${k}')">Cancelar</button></div>
   </div>`;
-
-  html += '<div class="sec-label">Pasajes y transportes</div><div class="card">';
-  pasajes.forEach(r => {
-    const amt = r.preciox2 ? `USD ${Number(r.preciox2).toLocaleString()}` : `USD ${Number(r.preciox1).toLocaleString()} x1`;
-    html += `<div class="budget-row"><div><div class="budget-label">${r.descripcion}</div><div class="budget-sub">${r.tipo}</div></div><div class="budget-amount">${amt}</div></div>`;
-  });
-  html += '</div>';
-
-  html += '<div class="sec-label">Actividades</div><div class="card">';
-  actividades.forEach(r => {
-    const amt = r.preciox2 > 0 ? `USD ${Number(r.preciox2).toLocaleString()}` : (r.preciox1 > 0 ? `USD ${Number(r.preciox1).toLocaleString()}` : '<span style="color:#166534">Gratis</span>');
-    html += `<div class="budget-row"><div><div class="budget-label">${r.lugar || r.descripcion}</div></div><div class="budget-amount">${amt}</div></div>`;
-  });
-  html += '</div>';
-
-  if (dinero.length) {
-    html += '<div class="sec-label">Efectivo disponible</div><div class="card">';
-    dinero.forEach(r => {
-      html += `<div class="budget-row"><div class="budget-label">${r.label}</div><div class="budget-amount">€ ${Math.round(r.euros).toLocaleString()}</div></div>`;
-    });
-    html += `<div class="budget-total"><span>Total en euros</span><span style="font-size:16px;font-weight:700">€ ${Math.round(totalEuros).toLocaleString()}</span></div></div>`;
-  }
-
-  document.getElementById('sec-presupuesto').innerHTML = html;
+  h+=sec('ac-'+k,'🎟','Actividades y lugares',true,actsH);
+  // NOTES
+  h+=sec('no-'+k,'📝','Notas',false,`<textarea class="nta" id="nta" placeholder="Restaurantes, códigos de acceso, tips, contactos..."></textarea><button class="sbtn" onclick="saveN('${k}')">💾 Guardar notas</button>`);
+  return h;
 }
-
-// ── EQUIPAJE ──
-function renderEquipaje() {
-  if (!DATA || !DATA.equipaje) return;
-  const eq = DATA.equipaje;
-  const catIcons = { Aseo:'🧴', Skincare:'✨', Makeup:'💄', Botiquin:'🩹', Vestido:'👗', Tops:'👚', Bottoms:'👖', Zapatos:'👟', Abrigo:'🧥', Accesorios:'💍', Docs:'🪪' };
-
-  let html = '';
-  Object.entries(eq).forEach(([cat, items]) => {
-    html += `<div class="sec-label">${catIcons[cat]||'📦'} ${cat}</div><div class="card">`;
-    items.forEach((item, i) => {
-      const key = 'eq_' + cat + '_' + i;
-      const done = checkState[key] || false;
-      html += `<div class="check-item" onclick="toggleCheck('${key}', this)">
-        <div class="check-box${done?' done':''}"></div>
-        <div class="check-text${done?' done':''}">${item}</div>
-      </div>`;
-    });
-    html += '</div>';
-  });
-  document.getElementById('sec-equipaje').innerHTML = html;
+function sec(id,icon,title,open,body){
+  return `<div class="sc">
+    <div class="sc-hdr" onclick="tog('${id}',this)"><div class="sc-icon">${icon}</div><div class="sc-title">${title}</div><div class="sc-arr${open?' open':''}" id="arr-${id}">›</div></div>
+    <div class="sc-body${open?'':' hidden'}" id="${id}">${body}</div>
+  </div>`;
 }
-
-function toggleCheck(key, el) {
-  checkState[key] = !checkState[key];
-  const box = el.querySelector('.check-box');
-  const txt = el.querySelector('.check-text');
-  box.classList.toggle('done', checkState[key]);
-  txt.classList.toggle('done', checkState[key]);
-  localStorage.setItem('europa_checks', JSON.stringify(checkState));
+function makeBtns(arr){
+  if(!arr||!arr.length) return '';
+  return `<div class="btn-g${arr.length===1?' one':''}">`+arr.map(b=>`<a href="${b[1]}" target="_blank" class="btn ${b[2]}">${b[0]}</a>`).join('')+'</div>';
 }
-
-// ── SITIOS ──
-function renderSitios() {
-  if (!DATA || !DATA.sitios) return;
-  const sitios = DATA.sitios;
-  let html = '';
-  Object.entries(sitios).forEach(([ciudad, lugares]) => {
-    html += `<div class="sec-label">📍 ${ciudad}</div><div class="card">`;
-    lugares.forEach(l => {
-      html += `<div class="sitio-item">
-        <div class="sitio-name">${l.nombre}</div>
-        ${l.url ? `<a href="${l.url}" class="sitio-link" target="_blank">Ver →</a>` : ''}
-      </div>`;
-    });
-    html += '</div>';
-  });
-  document.getElementById('sec-sitios').innerHTML = html || '<p style="color:var(--muted);font-size:14px;text-align:center;padding:40px 0">Sin sitios cargados</p>';
+function tog(id){
+  document.getElementById(id).classList.toggle('hidden');
+  const a=document.getElementById('arr-'+id);
+  if(a) a.classList.toggle('open');
 }
-
-function renderAll() {
-  renderItinerario();
-  renderLogistica();
-  renderPresupuesto();
-  renderEquipaje();
-  renderSitios();
+function saveN(k){
+  localStorage.setItem(C[k].nk,document.getElementById('nta').value);
+  const b=event.target; b.textContent='✅ Guardado';
+  setTimeout(()=>b.textContent='💾 Guardar notas',1500);
 }
+function gCA(k){return JSON.parse(localStorage.getItem('ca_'+k)||'[]');}
+function sCA(k,a){localStorage.setItem('ca_'+k,JSON.stringify(a));}
+function renderCA(k){
+  const el=document.getElementById('ca-'+k); if(!el) return;
+  el.innerHTML=gCA(k).map((a,i)=>`<div class="act"><div class="adot c"></div><div style="flex:1"><div class="aname">${a.n} <span onclick="delAct('${k}',${i})" style="color:var(--muted);cursor:pointer;font-size:11px">✕</span></div><div class="adet">${a.d}</div></div></div>`).join('');
+}
+function togAdd(k){document.getElementById('af-'+k).classList.toggle('open');}
+function saveAct(k){
+  const n=document.getElementById('ain-'+k).value.trim();
+  const d=document.getElementById('aid-'+k).value.trim();
+  if(!n) return;
+  const a=gCA(k); a.push({n,d}); sCA(k,a); renderCA(k);
+  document.getElementById('ain-'+k).value='';
+  document.getElementById('aid-'+k).value='';
+  togAdd(k);
+}
+function delAct(k,i){const a=gCA(k);a.splice(i,1);sCA(k,a);renderCA(k);}
 </script>
 </body>
 </html>
